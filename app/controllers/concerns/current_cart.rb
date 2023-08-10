@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# CurrentCart
 module CurrentCart
   private
 
