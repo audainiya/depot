@@ -3,6 +3,7 @@
 # OrdersController
 class OrdersController < ApplicationController
   include CurrentCart
+  skip_before_action :authorize, only: %i[new create]
   before_action :set_cart, only: %i[new create]
   before_action :ensure_cart_isnt_empty, only: %i[new]
   before_action :set_order, only: %i[show edit update destroy]
@@ -31,6 +32,7 @@ class OrdersController < ApplicationController
       if @order.save
         Cart.destroy(session[:cart_id])
         session[:cart_id] = nil
+        OrderMailer.received(@order).deliver_later
         format.html { redirect_to store_index_url, notice: 'Thank you for your order.' }
         format.json { render :show, status: :created, location: @order }
       else
@@ -78,5 +80,18 @@ class OrdersController < ApplicationController
   # cart should not be empty while placing order. page 259
   def ensure_cart_isnt_empty
     redirect_to store_index_url, notice: 'Your cart is empty' if @cart.line_items.empty?
+  end
+
+  def pay_type_params
+    case order_params[:pay_type]
+    when 'Credit card'
+      params.require(:order).permit(:credit_card_number, :expiration_date)
+    when 'Check'
+      params.require(:order).permit(:routing_number, :account_number)
+    when 'Purchase order'
+      params.require(:order).permit(:po_number)
+    else
+      {}
+    end
   end
 end
