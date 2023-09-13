@@ -9,6 +9,9 @@ Rails.application.routes.draw do
   end
   get 'sessions/create'
   get 'sessions/destroy'
+  # START_HIGLIGHT
+  resources :support_requests, only: %i[index update]
+  # END_HIGLIGHT
   resources :users
   resources :products do
     get :who_bought, on: :member
